@@ -327,6 +327,8 @@ export default function TerminalPane({
         clearTabPtyId,
         consumeSuppressedPtyExit: useAppStore.getState().consumeSuppressedPtyExit,
         updateTabTitle,
+        setRuntimePaneTitle,
+        clearRuntimePaneTitle,
         updateTabPtyId,
         markWorktreeUnread,
         dispatchNotification,
