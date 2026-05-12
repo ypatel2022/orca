@@ -57,6 +57,7 @@ concurrency:
 
 jobs:
   cut:
+    if: github.repository == 'upstream_owner/orca'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
