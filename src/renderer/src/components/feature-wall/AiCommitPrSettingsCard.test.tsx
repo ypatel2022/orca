@@ -84,7 +84,7 @@ it('uses the shared AI-author picker without saving on cancel and preserves Cust
     ctrlKey: false
   })
   fireEvent.click(screen.getByRole('button', { name: 'Configure Codex' }))
-  fireEvent.click(screen.getByRole('option', { name: 'GPT-5.4' }))
+  fireEvent.click(await screen.findByRole('option', { name: 'GPT-5.4' }))
   fireEvent.keyDown(screen.getByLabelText('Search models'), { key: 'Escape' })
   fireEvent.keyDown(screen.getByPlaceholderText('Search agents and setups…'), { key: 'Escape' })
   expect(persist).not.toHaveBeenCalled()

@@ -71,7 +71,7 @@ describe('NativeChatSessionGate', () => {
     useAppStore.setState(useAppStore.getInitialState())
   })
 
-  it('keeps Find open with its query when the bridge first receives session metadata', () => {
+  it('keeps Find open with its query when the bridge first receives session metadata', async () => {
     useAppStore.setState(useAppStore.getInitialState())
     const paneKey = 'tab-1:leaf-1'
     render(
@@ -84,7 +84,7 @@ describe('NativeChatSessionGate', () => {
         ownsTabWideLaunchDraft
       />
     )
-    expect(screen.getByText('Session none')).toBeInTheDocument()
+    expect(await screen.findByText('Session none')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Find' }))
     const input = screen.getByRole('textbox', { name: 'Find in chat' })
     fireEvent.change(input, { target: { value: 'keep this search' } })

@@ -1,4 +1,11 @@
-import { useLayoutEffect, useRef, useState, type ReactElement, type ReactNode } from 'react'
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+  type RefObject
+} from 'react'
 import { ChevronRight } from 'lucide-react'
 import { autoUpdate } from '@floating-ui/dom'
 import { Button } from '@/components/ui/button'
@@ -14,6 +21,8 @@ export function AgentLaunchSetupSubmenu({
   renderAnchor,
   disabled,
   label,
+  contentRef,
+  triggerRef,
   children
 }: {
   open: boolean
@@ -21,10 +30,14 @@ export function AgentLaunchSetupSubmenu({
   renderAnchor: (trigger: ReactElement) => ReactElement
   disabled?: boolean
   label: string
+  contentRef?: RefObject<HTMLDivElement | null>
+  triggerRef?: RefObject<HTMLDivElement | null>
   children: ReactNode
 }) {
-  const trigger = useRef<HTMLDivElement>(null)
-  const content = useRef<HTMLDivElement>(null)
+  const localTrigger = useRef<HTMLDivElement>(null)
+  const trigger = triggerRef ?? localTrigger
+  const localContent = useRef<HTMLDivElement>(null)
+  const content = contentRef ?? localContent
   const [sideOffset, setSideOffset] = useState(4)
   useLayoutEffect(() => {
     if (!open) {
@@ -46,7 +59,7 @@ export function AgentLaunchSetupSubmenu({
       stop()
       observer.disconnect()
     }
-  }, [open])
+  }, [open, trigger])
   const segmentRelease = useRef(false)
   const focusSearch = () =>
     content.current?.querySelector<HTMLInputElement>('[cmdk-input]:not(:disabled)')?.focus({

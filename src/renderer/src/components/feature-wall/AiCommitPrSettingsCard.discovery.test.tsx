@@ -50,7 +50,7 @@ it.each(['omitted', 'efforts replaced'])(
       ctrlKey: false
     })
     fireEvent.click(screen.getByRole('button', { name: 'Configure Codex' }))
-    fireEvent.click(screen.getByRole('option', { name: 'GPT-6.1 Sol' }))
+    fireEvent.click(await screen.findByRole('option', { name: 'GPT-6.1 Sol' }))
     fireEvent.click(screen.getByRole('radio', { name: 'High' }))
     act(() =>
       useAppStore.setState(({ settings }) => ({

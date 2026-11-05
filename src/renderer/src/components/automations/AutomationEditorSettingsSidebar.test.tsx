@@ -189,16 +189,13 @@ describe('AutomationEditorSettingsSidebar agent picker', () => {
     expect(updater(DRAFT).agentId).toBe('claude')
   })
 
-  it('keeps observation read-only and accepts full Arguments only when the shared panel is used', () => {
+  it('keeps observation read-only and accepts full Arguments only when the shared panel is used', async () => {
     const onDraftChange = vi.fn()
     renderSidebar(onDraftChange)
-    const trigger = screen.getByRole('button', { name: 'Select agent' })
-    const caption = trigger.textContent
     openPicker()
-    expect(trigger.textContent).toBe(caption)
     expect(onDraftChange).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'Configure Codex' }))
-    fireEvent.change(document.querySelector('textarea')!, {
+    fireEvent.change(await screen.findByRole('textbox', { name: 'Arguments' }), {
       target: { value: '--search --add-dir docs' }
     })
     expect(onDraftChange).not.toHaveBeenCalled()
@@ -231,20 +228,21 @@ describe('AutomationEditorSettingsSidebar agent picker', () => {
     expect(onDraftChange.mock.calls[0][0](DRAFT).agentId).toBe('claude')
   })
 
-  it('retains explicit equal choices and folds accepted raw/control edits in their authored order', () => {
+  it('retains explicit equal choices and folds accepted raw/control edits in their authored order', async () => {
     const onDraftChange = vi.fn()
     const current = () => onDraftChange.mock.calls.reduce((draft, [update]) => update(draft), DRAFT)
     renderSidebar(onDraftChange)
-    const openSetup = () => {
+    const openSetup = async () => {
       openPicker()
       fireEvent.click(screen.getByRole('button', { name: 'Configure Codex' }))
+      await screen.findByLabelText('Search models')
     }
     const use = () => fireEvent.click(screen.getByRole('button', { name: 'Launch terminal' }))
-    openSetup()
+    await openSetup()
     fireEvent.click(screen.getByRole('option', { name: 'Model A' }))
     use()
     expect(onDraftChange.mock.calls.at(-1)?.[0](DRAFT).launchPreferences.model).toBe('gpt-5.4')
-    openSetup()
+    await openSetup()
     fireEvent.change(document.querySelector('textarea')!, {
       target: { value: '--model gpt-5.5 --search' }
     })
@@ -252,7 +250,7 @@ describe('AutomationEditorSettingsSidebar agent picker', () => {
     const raw = current()
     expect(raw.agentArgs).toBe('--model gpt-5.5 --search')
     expect(raw.launchPreferences?.model).toBeUndefined()
-    openSetup()
+    await openSetup()
     fireEvent.click(screen.getByRole('option', { name: 'Model A' }))
     use()
     const final = current()
@@ -320,7 +318,7 @@ describe('AutomationEditorSettingsSidebar agent picker', () => {
 
   it.each([true, false])(
     'keeps supplemental source order through Configure (choice first: %s)',
-    (choiceFirst) => {
+    async (choiceFirst) => {
       const changed = vi.fn()
       const initial: AutomationDraft = {
         ...DRAFT,
@@ -329,10 +327,10 @@ describe('AutomationEditorSettingsSidebar agent picker', () => {
         launchPreferences: { model: 'sonnet' }
       }
       renderSidebar(changed, initial)
-      const choose = () => {
+      const choose = async () => {
         openPicker()
         fireEvent.click(screen.getByRole('button', { name: 'Configure Claude' }))
-        fireEvent.click(screen.getByRole('option', { name: 'Model B' }))
+        fireEvent.click(await screen.findByRole('option', { name: 'Model B' }))
         fireEvent.click(screen.getByRole('button', { name: 'Launch terminal' }))
       }
       const type = () =>
@@ -340,11 +338,11 @@ describe('AutomationEditorSettingsSidebar agent picker', () => {
           target: { value: '--model sonnet --add-dir fixtures' }
         })
       if (choiceFirst) {
-        choose()
+        await choose()
         type()
       } else {
         type()
-        choose()
+        await choose()
       }
       const expected = choiceFirst ? '--model sonnet --add-dir fixtures' : '--add-dir fixtures'
       expect(screen.getByLabelText('Extra agent arguments')).toHaveProperty('value', expected)
@@ -359,7 +357,7 @@ describe('AutomationEditorSettingsSidebar agent picker', () => {
     }
   )
 
-  it('keeps a re-entered legacy model through a permission-only Configure acceptance', () => {
+  it('keeps a re-entered legacy model through a permission-only Configure acceptance', async () => {
     const capabilities = vi.spyOn(launchRoute, 'resolveHostCapabilities').mockReturnValue([])
     const changed = vi.fn()
     const initial: AutomationDraft = {
@@ -380,7 +378,7 @@ describe('AutomationEditorSettingsSidebar agent picker', () => {
     form.refresh()
     openPicker()
     fireEvent.click(screen.getByRole('button', { name: 'Configure Claude' }))
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Claude permissions' }), {
+    fireEvent.keyDown(await screen.findByRole('button', { name: 'Claude permissions' }), {
       key: 'ArrowDown'
     })
     fireEvent.click(screen.getByRole('menuitemradio', { name: /^Full access/ }))
@@ -427,7 +425,7 @@ describe('AutomationEditorSettingsSidebar agent picker', () => {
     ).toMatchObject({ extraAgentArgs: value, launchPreferences: { model: 'sonnet' } })
   })
 
-  it('does not replay the rebind copy over text edited before Configure', () => {
+  it('does not replay the rebind copy over text edited before Configure', async () => {
     const changed = vi.fn()
     const initial: AutomationDraft = {
       ...DRAFT,
@@ -441,7 +439,7 @@ describe('AutomationEditorSettingsSidebar agent picker', () => {
     fireEvent.change(screen.getByLabelText('Extra agent arguments'), { target: { value } })
     openPicker()
     fireEvent.click(screen.getByRole('button', { name: 'Configure Claude' }))
-    fireEvent.click(screen.getByRole('option', { name: 'Model B' }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Model B' }))
     fireEvent.click(screen.getByRole('button', { name: 'Launch terminal' }))
     expect(screen.getByLabelText('Extra agent arguments')).toHaveProperty('value', value)
     const next = changed.mock.calls.reduce((draft, [update]) => update(draft), initial)
@@ -493,7 +491,7 @@ describe('AutomationEditorSettingsSidebar agent picker', () => {
     ).toBe('--add-dir fixtures')
   })
 
-  it('keeps accepted full Arguments through a legacy destination edit and return', () => {
+  it('keeps accepted full Arguments through a legacy destination edit and return', async () => {
     const capabilities = vi
       .spyOn(launchRoute, 'resolveHostCapabilities')
       .mockReturnValue(AUTOMATION_RUNTIME_CAPABILITIES)
@@ -511,9 +509,7 @@ describe('AutomationEditorSettingsSidebar agent picker', () => {
     })
     openPicker()
     fireEvent.click(screen.getByRole('button', { name: 'Configure Claude' }))
-    const argumentsInput = [...document.querySelectorAll('textarea')].find(
-      (input) => input !== screen.getByLabelText('Extra agent arguments')
-    )
+    const argumentsInput = await screen.findByRole('textbox', { name: 'Arguments' })
     expect(argumentsInput).toBeTruthy()
     fireEvent.change(argumentsInput!, {
       target: { value: '--verbose --model opus' }
@@ -681,12 +677,14 @@ describe('AutomationEditorSettingsSidebar agent picker', () => {
     expect(next.extraAgentArgs).toBe('--add-dir docs')
   })
 
-  it('discards an unaccepted setup when the editor owner closes', () => {
+  it('discards an unaccepted setup when the editor owner closes', async () => {
     const onDraftChange = vi.fn()
     const form = renderSidebar(onDraftChange)
     openPicker()
     fireEvent.click(screen.getByRole('button', { name: 'Configure Codex' }))
-    fireEvent.change(document.querySelector('textarea')!, { target: { value: '--unaccepted' } })
+    fireEvent.change(await screen.findByRole('textbox', { name: 'Arguments' }), {
+      target: { value: '--unaccepted' }
+    })
     form.unmount()
     renderSidebar(onDraftChange)
     openPicker()

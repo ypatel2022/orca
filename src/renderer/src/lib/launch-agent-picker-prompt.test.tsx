@@ -117,6 +117,11 @@ function button(name: string): HTMLButtonElement {
   return screen.getByRole('button', { name })
 }
 
+async function openSetup(label: string): Promise<void> {
+  fireEvent.click(screen.getByRole('button', { name: `Configure ${label}` }))
+  await screen.findByRole('textbox', { name: 'Arguments' })
+}
+
 it.each(
   (['menu', 'search'] as const).flatMap((route) =>
     (['claude', 'codex'] as const).map((agent) => ({ route, agent }))
@@ -141,7 +146,7 @@ it.each(
         target: { value: 'launch-model' }
       })
     }
-    fireEvent.click(document.querySelector(`button[aria-label="Configure ${selected.label}"]`)!)
+    await openSetup(selected.label)
     const argumentsInput = document.querySelector('textarea[aria-label="Arguments"]')!
     fireEvent.change(argumentsInput, { target: { value: '--model "unterminated' } })
     changePrompt(editor(), 'review this change')
@@ -270,7 +275,7 @@ it.each([true, false])(
       .spyOn(launcher, 'launchAgentInNewTab')
       .mockImplementation((args) => actualLaunch({ ...args, launchPlatform: 'linux' }))
     render(<Menu route="menu" selected={selected} />)
-    fireEvent.click(document.querySelector('button[aria-label="Configure Codex"]')!)
+    await openSetup('Codex')
     act(() =>
       promptEditor(editor()).commands.setContent({
         type: 'doc',
@@ -328,7 +333,7 @@ it('holds an actual clipboard-image paste until its save settles before launchin
     .spyOn(launcher, 'launchAgentInNewTab')
     .mockImplementation((args) => actualLaunch({ ...args, launchPlatform: 'linux' }))
   render(<Menu route="menu" />)
-  fireEvent.click(document.querySelector('button[aria-label="Configure Claude"]')!)
+  await openSetup('Claude')
   let finishSave: (path: string) => void = () => {}
   const save = vi.fn(
     () =>
@@ -433,7 +438,7 @@ it.each([
         target: { value: 'launch-model' }
       })
     }
-    fireEvent.click(document.querySelector(`button[aria-label="Configure ${selected.label}"]`)!)
+    await openSetup(selected.label)
     changePrompt(editor(), 'review @/repo/file')
     await act(async () => button('Launch terminal').click())
     expect(readNativeChatComposerDraft(scope).text).toBe('')
@@ -486,7 +491,7 @@ it.each([
         target: { value: 'launch-model' }
       })
     }
-    fireEvent.click(document.querySelector(`button[aria-label="Configure ${selected.label}"]`)!)
+    await openSetup(selected.label)
     expect(editor().textContent).toContain('review @/repo/file')
     await act(async () => button('Launch terminal').click())
     await expect(dispatch.mock.results.at(-1)?.value?.promptDeliveryResult).resolves.toMatchObject({
@@ -501,7 +506,7 @@ it('returns setup input when explicit chat is refused before session admission',
   mockCreateSupport.mockResolvedValue({ supported: false, reason: 'Not available here' })
   render(<Menu route="search" />)
   fireEvent.change(document.querySelector('input')!, { target: { value: 'launch-model' } })
-  fireEvent.click(document.querySelector('button[aria-label="Configure Claude"]')!)
+  await openSetup('Claude')
   changePrompt(editor(), 'task before any session')
   await act(async () => button('Launch chat').click())
   await waitFor(() =>

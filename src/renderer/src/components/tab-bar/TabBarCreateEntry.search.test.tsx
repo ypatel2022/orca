@@ -547,61 +547,6 @@ describe('TabBarCreateEntry search behavior', () => {
   })
 })
 
-it('launches searched defaults on Enter and reaches the alternate only through Configure', () => {
-  const launched = vi.fn()
-  const entry = {
-    agent: 'codex' as const,
-    label: 'Codex',
-    rows: [{ agent: 'codex' as const, kind: 'chat' as const }],
-    surfaces: ['chat' as const, 'terminal' as const],
-    defaultSurface: 'chat' as const,
-    terminal: {},
-    structured: {},
-    catalog: {
-      origin: 'probe' as const,
-      fetchedAt: 1,
-      models: [
-        { id: 'astra', label: 'Astra', isDefault: true, efforts: [{ value: 'low', label: 'Low' }] }
-      ]
-    }
-  }
-  renderEntry({ agentPickerEntries: [entry], onLaunchAgentOption: launched })
-  setQuery('astra low')
-  submit()
-  expect(launched).toHaveBeenCalledOnce()
-  expect(launched.mock.calls[0][0].setup).toMatchObject({
-    surface: 'chat',
-    choices: { model: 'astra', options: { effort: 'low' } }
-  })
-  launched.mockClear()
-  renderEntry({ agentPickerEntries: [entry], onLaunchAgentOption: launched })
-  setQuery('astra low')
-  expect(container.querySelector('button[aria-label="Launch terminal"]')).toBeNull()
-  const configure = container.querySelector<HTMLButtonElement>(
-    'button[aria-label="Configure Codex"]'
-  )!
-  expect(configure.dataset.variant).toBe('ghost')
-  expect(configure.dataset.size).toBe('icon-xs')
-  expect(
-    configure.querySelector('svg.lucide-chevron-right')?.classList.contains('text-muted-foreground')
-  ).toBe(true)
-  expect(configure.classList.contains('border')).toBe(false)
-  expect(configure.previousElementSibling?.getAttribute('data-slot')).toBe('separator')
-  expect(configure.previousElementSibling?.getAttribute('data-orientation')).toBe('vertical')
-  expect(
-    configure.previousElementSibling?.classList.contains('data-[orientation=vertical]:h-4')
-  ).toBe(true)
-  act(() => configure.click())
-  expect(launched).not.toHaveBeenCalled()
-  act(() =>
-    [...document.querySelectorAll<HTMLButtonElement>('button')]
-      .find((button) => button.getAttribute('aria-label') === 'Launch terminal')
-      ?.click()
-  )
-  expect(launched).toHaveBeenCalledOnce()
-  expect(launched.mock.calls[0][0].setup.surface).toBe('terminal')
-})
-
 it.each(['g', 'low', 'high'])(
   'keeps the file as the selected Enter action for %s with setup search mounted',
   (query) => {

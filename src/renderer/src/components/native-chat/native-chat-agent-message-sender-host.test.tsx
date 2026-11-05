@@ -155,7 +155,7 @@ function seed(duplicate = false, terminal = false): void {
     true
   )
 }
-async function mount(): Promise<ReturnType<typeof render>> {
+async function mount(senderName = 'Remote rename'): Promise<ReturnType<typeof render>> {
   let view: ReturnType<typeof render>
   await act(async () => {
     view = render(
@@ -164,6 +164,7 @@ async function mount(): Promise<ReturnType<typeof render>> {
       </TooltipProvider>
     )
   })
+  await screen.findAllByRole('button', { name: senderName })
   return view!
 }
 function publish(host: string, sessionId: string = ROOT): void {
@@ -293,7 +294,7 @@ it.each([false, true])(
 
 it('keeps recorded CLI labels and focuses the exact remote pane from both surfaces', async () => {
   seed(false, true)
-  await mount()
+  await mount('Recorded sender')
   for (const link of screen.getAllByRole('button', { name: 'Recorded sender' })) {
     await act(async () => fireEvent.click(link))
     expect(transport.focusRenderer).toHaveBeenLastCalledWith('term-current', 'server-1')
@@ -320,7 +321,7 @@ it('keeps older-host direct-root names and both clicks on the stamped host when 
       ]
     }
   })
-  await mount()
+  await mount('Legacy remote rename')
   for (const link of screen.getAllByRole('button', { name: 'Legacy remote rename' })) {
     await act(async () => fireEvent.click(link))
     expect(useAppStore.getState().activateTab).toHaveBeenLastCalledWith('remote-sender', {

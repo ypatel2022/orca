@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { act } from 'react'
-import { fireEvent, getByRole } from '@testing-library/react'
+import { findByRole, fireEvent, getByRole } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -57,7 +57,7 @@ afterEach(() => {
 })
 
 describe('setup records exist only for authored setups', () => {
-  it('keeps typed prompt and options through close, reopen and a rename', () => {
+  it('keeps typed prompt and options through close, reopen and a rename', async () => {
     const entry = {
       ...row(0, 'codex'),
       worktreeId: 'repo::/old',
@@ -78,6 +78,7 @@ describe('setup records exist only for authored setups', () => {
     const close = () => fireEvent.keyDown(document.querySelector('textarea')!, { key: 'Escape' })
     show(entry)
     fireEvent.click(configure())
+    await findByRole(document.body, 'textbox', { name: 'Arguments' })
     close()
     expect(sourceCount()).toBe(0)
 
@@ -152,6 +153,7 @@ describe('setup records exist only for authored setups', () => {
 
     // Opening a preset saves nothing, and the plain row still shows defaults.
     fireEvent.click(searched)
+    await findByRole(document.body, 'textbox', { name: 'Arguments' })
     expect(model()).toBe('opus')
     expect(effort('High')).toBe('on')
     close()

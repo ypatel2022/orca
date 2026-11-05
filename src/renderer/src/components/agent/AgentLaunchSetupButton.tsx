@@ -1,12 +1,22 @@
-import { useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactElement } from 'react'
+import {
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactElement
+} from 'react'
 import { flushSync } from 'react-dom'
 import { ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { AgentLaunchSetupSubmenu } from './AgentLaunchSetupSubmenu'
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { RecoverableRenderErrorBoundary } from '@/components/error-boundaries/RecoverableRenderErrorBoundary'
 import { translate } from '@/i18n/i18n'
-import { AgentLaunchSetupPanel } from './AgentLaunchSetupPanel'
+import { lazyWithRetry } from '@/lib/lazy-with-retry'
 import type {
   AgentPickerDraft,
   AgentPickerEntry,
@@ -14,6 +24,32 @@ import type {
 } from '../../../../shared/agent-launch/picker/agent-launch-picker'
 
 import { useAgentPickerSetup, type AgentPickerSetupIdentity } from './agent-launch-picker-drafts'
+
+const AgentLaunchSetupPanel = lazyWithRetry(
+  () =>
+    import('./AgentLaunchSetupPanel').then((module) => ({ default: module.AgentLaunchSetupPanel })),
+  { reloadKey: 'agent-launch-setup-panel' }
+)
+
+function AgentLaunchSetupLoading(): React.JSX.Element {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const timer = window.setTimeout(() => setVisible(true), 200)
+    return () => window.clearTimeout(timer)
+  }, [])
+  return (
+    <div role="status" className="flex h-24 items-center justify-center text-muted-foreground">
+      {visible ? (
+        <>
+          <LoadingSpinner className="size-4" />
+          <span className="sr-only">
+            {translate('auto.components.editor.EditorPanelShell.e2c4dec350', 'Loading editor...')}
+          </span>
+        </>
+      ) : null}
+    </div>
+  )
+}
 
 export {
   invalidateAgentPickerDrafts,
@@ -28,6 +64,7 @@ export type AgentLaunchSetupPanelProps = {
   getDraft: () => AgentPickerDraft | undefined
   mode?: 'launch' | 'select'
   disabled?: boolean
+  shouldAutoFocus?: () => boolean
   onDraftChange: (draft: AgentPickerDraft) => void
   onUse: (draft: AgentPickerDraft) => boolean | void | Promise<boolean>
 }
@@ -155,26 +192,54 @@ export function AgentLaunchSetupButton({
   const panel = (
     <div className="min-h-0 overflow-y-auto scrollbar-sleek">
       {setup.ready ? (
-        <AgentLaunchSetupPanel
-          entry={entry}
-          mode={mode}
-          draft={setup.draft}
-          getDraft={setup.getDraft}
-          disabled={disabled}
-          onDraftChange={setup.change}
-          onUse={(draft) => {
-            const options = { ...draft, surface: setup.draft.surface }
-            delete options.prompt
-            if (!setup.accept(mode === 'select' ? draft : options)) {
-              return false
-            }
-            const accepted = onUse(draft)
-            if (accepted !== false) {
-              changeOpen(false)
-            }
-            return accepted
-          }}
-        />
+        <RecoverableRenderErrorBoundary
+          boundaryId="agent-launch-setup-panel"
+          surface="overlay"
+          resetKey={entry.ownerKey}
+          fallback={() => (
+            <div role="alert" className="flex flex-col gap-3 p-4">
+              <p className="text-sm">
+                {translate(
+                  'auto.components.error.boundaries.RecoverableRenderErrorBoundary.ab855c11f4',
+                  'This part of Orca hit an error.'
+                )}
+              </p>
+              <div className="flex justify-end">
+                <Button type="button" variant="ghost" size="xs" onClick={() => changeOpen(false)}>
+                  {translate('auto.components.ui.dialog.f26c4baeda', 'Close')}
+                </Button>
+              </div>
+            </div>
+          )}
+        >
+          <Suspense fallback={<AgentLaunchSetupLoading />}>
+            <AgentLaunchSetupPanel
+              entry={entry}
+              mode={mode}
+              draft={setup.draft}
+              getDraft={setup.getDraft}
+              disabled={disabled}
+              shouldAutoFocus={() =>
+                content.current === null ||
+                content.current.contains(document.activeElement) ||
+                (submenu && anchor.current?.contains(document.activeElement) === true)
+              }
+              onDraftChange={setup.change}
+              onUse={(draft) => {
+                const options = { ...draft, surface: setup.draft.surface }
+                delete options.prompt
+                if (!setup.accept(mode === 'select' ? draft : options)) {
+                  return false
+                }
+                const accepted = onUse(draft)
+                if (accepted !== false) {
+                  changeOpen(false)
+                }
+                return accepted
+              }}
+            />
+          </Suspense>
+        </RecoverableRenderErrorBoundary>
       ) : null}
     </div>
   )
@@ -187,6 +252,8 @@ export function AgentLaunchSetupButton({
         renderAnchor={renderAnchor}
         disabled={disabled}
         label={label}
+        contentRef={content}
+        triggerRef={anchor}
       >
         {panel}
       </AgentLaunchSetupSubmenu>

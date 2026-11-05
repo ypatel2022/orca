@@ -1,8 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { RefObject } from 'react'
 import { shouldPreserveEditableFocus } from '@/components/terminal-pane/pane-helpers'
+import { isXtermHelperTextarea } from '@/components/terminal-pane/regular-terminal-focus-ownership'
 import { scheduleNextFrame } from '@/components/terminal-pane/terminal-ime-input-context-refresh'
-import { getOverlayFocusOwners } from '@/lib/overlay-focus-ownership'
+import { getOverlayFocusOwners, isOverlayFocusSourceDismissed } from '@/lib/overlay-focus-ownership'
+import { getVisibleOverlays, isVisibleOverlay } from '@/lib/visible-overlay'
 import type { NativeChatComposerHandle } from './NativeChatComposer'
 import { registerNativeChatPane } from './native-chat-composer-mount'
 import {
@@ -56,6 +58,7 @@ export function useNativeChatComposerRevealFocus({
     return undefined
   }, [composerReady, composerRef, surfaceReady, tabId])
   const claimedRef = useRef(false)
+  const claimStartedRef = useRef(false)
   // An explicit tab activation takes focus from inside the pane too, short of a text field.
   const explicitRef = useRef(false)
   const sourceOverlaysRef = useRef<readonly HTMLElement[]>([])
@@ -120,6 +123,29 @@ export function useNativeChatComposerRevealFocus({
     if (claimedRef.current) {
       return
     }
+    const root = rootRef.current
+    const active = root?.ownerDocument.activeElement
+    if (
+      !claimStartedRef.current &&
+      !explicitRef.current &&
+      active &&
+      active !== root?.ownerDocument.body &&
+      !isXtermHelperTextarea(active) &&
+      !active.closest('[hidden], [inert]') &&
+      !active.contains(root ?? null) &&
+      !root?.contains(active) &&
+      !getVisibleOverlays({ includeAriaHidden: true }).some(
+        (owner) =>
+          owner.contains(active) &&
+          (isOverlayFocusSourceDismissed(owner) ||
+            !isVisibleOverlay(owner, { includeAriaHidden: true, ignoreDismissed: true }))
+      )
+    ) {
+      claimStartedRef.current = true
+      claimedRef.current = true
+      return
+    }
+    claimStartedRef.current = true
     let cancelled = false
     let userInteracted = false
     let attempts = 0

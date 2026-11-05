@@ -6,7 +6,7 @@ import {
 } from '../../../../shared/agent-launch/picker/agent-launch-picker'
 import { entry, root } from './agent-launch-setup-panel-test-fixture'
 import { act } from 'react'
-import { fireEvent, getByRole, waitFor } from '@testing-library/react'
+import { findByRole, fireEvent, getByRole, waitFor } from '@testing-library/react'
 import { expect, it, vi } from 'vitest'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { agentLaunchPromptScopeKey } from './AgentLaunchPromptComposer'
@@ -62,6 +62,7 @@ it.each(['claude', 'codex'] as const)(
     const configure = () =>
       document.querySelector<HTMLButtonElement>(`button[aria-label="Configure ${agent}"]`)!
     fireEvent.click(configure())
+    await findByRole(document.body, 'textbox', { name: 'Arguments' })
     const panel = () =>
       document.querySelector<HTMLElement>(
         '[data-slot="dropdown-menu-sub-content"], [data-slot="popover-content"]'

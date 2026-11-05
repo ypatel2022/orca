@@ -86,7 +86,7 @@ it.each(['claude', 'codex'] as const)(
     await waitFor(() => expect(trigger.hasAttribute('disabled')).toBe(false))
     await user.click(trigger)
     await user.click(screen.getByRole('button', { name: `Configure ${label}` }))
-    await user.click(screen.getByRole('option', { name: model }))
+    await user.click(await screen.findByRole('option', { name: model }))
     await user.click(screen.getByRole('radio', { name: 'Low' }))
     await user.click(screen.getByRole('button', { name: `${label} permissions` }))
     await user.click(screen.getByRole('menuitemradio', { name: /^Full access/ }))

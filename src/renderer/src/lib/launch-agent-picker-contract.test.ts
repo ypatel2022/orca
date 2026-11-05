@@ -5,7 +5,7 @@ import {
 // @vitest-environment happy-dom
 import type * as SettingsTransport from '../runtime/agent-launch-settings/agent-launch-settings-transport'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, fireEvent, render } from '@testing-library/react'
+import { act, cleanup, findByRole, fireEvent, render } from '@testing-library/react'
 import { createElement } from 'react'
 import { AgentLaunchSetupPanel } from '../components/agent/AgentLaunchSetupPanel'
 import { TooltipProvider } from '../components/ui/tooltip'
@@ -247,11 +247,7 @@ describe('picker window launch contract', () => {
           }
           fireEvent.click(document.querySelector('button[aria-label="Configure Claude"]')!)
           expect(dispatch).not.toHaveBeenCalled()
-          fireEvent.click(
-            [...document.querySelectorAll('button')].find(
-              (button) => button.textContent === 'Launch terminal'
-            )!
-          )
+          fireEvent.click(await findByRole(document.body, 'button', { name: 'Launch terminal' }))
           expect(dispatch).toHaveBeenCalledOnce()
           expect(dispatch.mock.calls[0][0]).toMatchObject({
             requestedSurface: 'terminal',

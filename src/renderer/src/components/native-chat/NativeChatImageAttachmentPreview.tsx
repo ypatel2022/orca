@@ -12,7 +12,7 @@ import { isAgentSessionAttachmentStorePath } from '../../../../shared/agent-sess
 import { chatImageAccess } from '@/lib/local-file-access'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { runtimeTargetForOwnerEnvironment } from '@/runtime/runtime-client-target'
-import { nativeChatImageNumberLabel } from './NativeChatImageReferencePill'
+import { nativeChatImageNumberLabel } from './native-chat-image-number-label'
 
 type Props = {
   attachment: NativeChatComposerImageAttachment

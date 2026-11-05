@@ -3,15 +3,12 @@ import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
 import { ImageIcon, ImageOff } from 'lucide-react'
 import { translate } from '@/i18n/i18n'
 import { NativeChatPromptPill } from './NativeChatPromptPill'
+import { nativeChatImageNumberLabel } from './native-chat-image-number-label'
 
 /** The ids of the composer's thumbnail row, in order: what numbers a chip and its thumbnail. */
 const ImageRowContext = createContext<readonly string[]>([])
 
 export const NativeChatImageRowProvider = ImageRowContext.Provider
-
-export function nativeChatImageNumberLabel(number: number): string {
-  return translate('components.native-chat.composer.imageNumber', 'Image #{{number}}', { number })
-}
 
 export function NativeChatImageReferencePill({ node, selected }: NodeViewProps): React.JSX.Element {
   const attachmentId = String(node.attrs.attachmentId)

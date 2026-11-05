@@ -243,7 +243,7 @@ afterEach(() => {
 
 it('retires delayed Copy on a genuine keyboard tab hide, preserves the editor and reopens', async () => {
   const view = render(<Host />)
-  const input = screen.getByRole<HTMLInputElement>('textbox', { name: 'draft-chat-0' })
+  const input = await screen.findByRole<HTMLInputElement>('textbox', { name: 'draft-chat-0' })
   fireEvent.change(input, { target: { value: 'editor state survives hide' } })
   input.focus()
   const open = () => fireEvent.click(screen.getByRole('button', { name: 'Open source' }))

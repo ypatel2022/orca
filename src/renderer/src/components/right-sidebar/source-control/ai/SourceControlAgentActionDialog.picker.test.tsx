@@ -113,7 +113,7 @@ it.each(['global', 'repo'] as const)(
     )
     await user.click(screen.getByRole('button', { name: 'Select agent' }))
     await user.click(screen.getByRole('button', { name: 'Configure Claude' }))
-    await user.click(screen.getByRole('button', { name: 'Claude permissions' }))
+    await user.click(await screen.findByRole('button', { name: 'Claude permissions' }))
     await user.click(screen.getByRole('menuitemradio', { name: /^Ask/ }))
     await user.click(screen.getByRole('button', { name: 'Launch terminal' }))
     if (scope === 'repo') {
@@ -156,8 +156,9 @@ it.each(['global', 'repo'] as const)(
       )
       await user.click(screen.getByRole('button', { name: 'Select agent' }))
       await user.click(screen.getByRole('button', { name: 'Configure Claude' }))
+      const toggle = await screen.findByRole('button', { name: 'Toggle Arguments' })
       if (!screen.queryByRole('textbox', { name: 'Arguments' })) {
-        await user.click(screen.getByRole('button', { name: 'Toggle Arguments' }))
+        await user.click(toggle)
       }
     }
     await configure()
@@ -258,7 +259,7 @@ it.each(['global', 'repo'] as const)(
         await waitFor(() => expect(trigger).toHaveProperty('disabled', false))
         fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false })
         fireEvent.click(await screen.findByRole('button', { name: 'Configure Claude' }))
-        const toggle = screen.getByRole('button', { name: 'Toggle Arguments' })
+        const toggle = await screen.findByRole('button', { name: 'Toggle Arguments' })
         if (!screen.queryByRole('textbox', { name: 'Arguments' })) {
           fireEvent.click(toggle)
         }
@@ -412,7 +413,9 @@ it.each([
     await user.click(screen.getByRole('button', { name: 'Select agent' }))
     await user.click(screen.getByRole('button', { name: 'Configure Claude' }))
     if (agentId === null) {
-      fireEvent.keyDown(screen.getByRole('button', { name: 'Launch terminal' }), { key: 'Escape' })
+      fireEvent.keyDown(await screen.findByRole('button', { name: 'Launch terminal' }), {
+        key: 'Escape'
+      })
       fireEvent.keyDown(document, { key: 'Escape' })
       expect(f.controller.recipe.agentId).toBeNull()
       expect(f.persist).not.toHaveBeenCalled()
@@ -510,8 +513,9 @@ it.each([true, false] as const)(
     )
     await user.click(screen.getByRole('button', { name: 'Select agent' }))
     await user.click(screen.getByRole('button', { name: 'Configure Claude' }))
+    const toggleArguments = await screen.findByRole('button', { name: 'Toggle Arguments' })
     if (!screen.queryByRole('textbox', { name: 'Arguments' })) {
-      await user.click(screen.getByRole('button', { name: 'Toggle Arguments' }))
+      await user.click(toggleArguments)
     }
     fireEvent.change(screen.getByRole('textbox', { name: 'Arguments' }), {
       target: {

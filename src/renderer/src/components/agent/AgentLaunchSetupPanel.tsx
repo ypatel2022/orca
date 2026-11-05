@@ -10,7 +10,6 @@ import { Check, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getAgentSessionOptionLaunchCatalog } from '../../../../shared/agent-session/options/agent-session-option-catalog'
 import {
   Command,
-  CommandInput,
   CommandList,
   CommandEmpty,
   CommandGroup,
@@ -31,6 +30,7 @@ import {
   type AgentLaunchSetupFooterHandle
 } from './AgentLaunchSetupFooter'
 import { AgentLaunchSetupActions } from './AgentLaunchSetupActions'
+import { AgentLaunchSetupSearch } from './AgentLaunchSetupSearch'
 import { agentPickerPanelArguments } from '../../../../shared/agent-launch/picker/agent-launch-picker-arguments'
 import {
   acceptAgentPickerArguments,
@@ -52,6 +52,7 @@ export function AgentLaunchSetupPanel({
   getDraft,
   mode = 'launch',
   disabled,
+  shouldAutoFocus,
   onDraftChange,
   onUse
 }: AgentLaunchSetupPanelProps) {
@@ -195,16 +196,13 @@ export function AgentLaunchSetupPanel({
           }
         }}
       >
-        <CommandInput
-          autoFocus
+        <AgentLaunchSetupSearch
+          shouldAutoFocus={shouldAutoFocus}
           disabled={modelDisabled}
-          aria-busy={catalogPending}
-          value={modelQuery}
-          onValueChange={setModelQuery}
-          aria-label={translate('agentPicker.searchModels', 'Search models')}
-          placeholder={translate('agentPicker.searchAgentModels', 'Search {{agent}} models…', {
-            agent: entry.label
-          })}
+          pending={catalogPending}
+          query={modelQuery}
+          onQueryChange={setModelQuery}
+          agentLabel={entry.label}
         />
         <CommandList className="max-h-56" data-focus-behavior="page">
           {catalogMessage ? (
