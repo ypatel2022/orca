@@ -152,14 +152,16 @@ export function mountSourceDialog(
   }
 }
 
-export async function pickDialogAgent(label: string, terminal: boolean) {
+export async function pickDialogAgent(label: string, terminal: boolean, setupTimeoutMs?: number) {
   const trigger = screen.getByRole('button', { name: 'Select agent' })
   await waitFor(() => expect(trigger.hasAttribute('disabled')).toBe(false))
   fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false })
   if (!terminal) {
     // Chat is chosen inside the setup popover. A row click keeps the saved surface.
     fireEvent.click(await screen.findByRole('button', { name: `Configure ${label}` }))
-    fireEvent.click(await screen.findByRole('button', { name: 'Launch chat' }))
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Launch chat' }, { timeout: setupTimeoutMs })
+    )
     return
   }
   const row = (await screen.findAllByRole('menuitem')).find((item) =>

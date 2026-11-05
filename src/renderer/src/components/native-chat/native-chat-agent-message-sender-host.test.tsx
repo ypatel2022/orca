@@ -164,7 +164,8 @@ async function mount(senderName = 'Remote rename'): Promise<ReturnType<typeof re
       </TooltipProvider>
     )
   })
-  await screen.findAllByRole('button', { name: senderName })
+  // Full CI shards transform the cold chat module on demand before its sender controls mount.
+  await screen.findAllByRole('button', { name: senderName }, { timeout: 10_000 })
   return view!
 }
 function publish(host: string, sessionId: string = ROOT): void {

@@ -29,6 +29,10 @@ const unused = vi.fn()
 function configure(patch: Partial<GlobalSettings>) {
   useAppStore.setState(({ settings }) => ({ settings: settings && { ...settings, ...patch } }))
 }
+async function waitForSetupPanel(): Promise<void> {
+  // Cold setup imports can exceed the default query timeout on isolated CI workers.
+  await screen.findByRole('button', { name: 'Toggle Arguments' }, { timeout: 10_000 })
+}
 function Row({
   agent = 'claude',
   actionId = 'fixChecks',
@@ -99,6 +103,7 @@ it('isolates equal-baseline row buffers and delegation, retains them on close, a
     await waitFor(() => expect(trigger).toHaveProperty('disabled', false))
     fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false })
     fireEvent.click(screen.getByRole('button', { name: 'Configure Claude' }))
+    await waitForSetupPanel()
     await waitFor(() =>
       expect(screen.getByRole('textbox', { name: 'Arguments' })).toHaveProperty('disabled', false)
     )
@@ -136,6 +141,7 @@ it('keeps the complete staged global setup across a template-only edit and appli
     await waitFor(() => expect(trigger).toHaveProperty('disabled', false))
     fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false })
     fireEvent.click(screen.getByRole('button', { name: 'Configure Claude' }))
+    await waitForSetupPanel()
   }
   await open()
   fireEvent.click(screen.getByRole('button', { name: 'Remove --model sonnet' }))

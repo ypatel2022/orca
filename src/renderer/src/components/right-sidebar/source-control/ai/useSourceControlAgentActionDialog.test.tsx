@@ -249,7 +249,7 @@ it.each([
         screen.getByRole('button', { name: 'Save & start agent' }).hasAttribute('disabled')
       ).toBe(false)
     )
-    await pickDialogAgent('Claude', terminal)
+    await pickDialogAgent('Claude', terminal, 10_000)
     if (terminal) {
       expect(f.controller.agentArgs).toBe('--verbose')
     } else {
@@ -380,7 +380,7 @@ it('distinguishes masked eligibility from owning reset and uses the captured par
     projectSourceControlActionLaunch(freshDialogRecipe(f.repo.id), 'codex', { basePrompt: 'fix' })
       .sessionOptions
   ).toEqual({ model: 'o3' })
-  await pickDialogAgent('Claude', false)
+  await pickDialogAgent('Claude', false, 10_000)
   await pickDialogAgent('Codex', true)
   expect(screen.queryByText(/Opus/)).toBeNull()
   f.view.unmount()
